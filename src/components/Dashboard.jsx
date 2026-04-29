@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import bgImage from "../assets/bg.jpg";
+
 import {
   BarChart,
   Bar,
@@ -11,6 +12,7 @@ import {
   Pie,
   Cell,
 } from "recharts";
+
 import {
   FaChartPie,
   FaWallet,
@@ -18,7 +20,6 @@ import {
   FaTrash,
   FaDownload,
 } from "react-icons/fa";
-import { motion } from "framer-motion";
 
 const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#a855f7"];
 
@@ -31,7 +32,7 @@ export default function Dashboard() {
   const [amount, setAmount] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [view, setView] = useState("dashboard");
-  const [sidebarOpen, setSidebarOpen] = useState(false); // ✅ NEW
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     localStorage.setItem("expenses", JSON.stringify(expenses));
@@ -57,13 +58,10 @@ export default function Dashboard() {
 
   const exportCSV = () => {
     if (expenses.length === 0) return;
-
     const rows = expenses.map((e) => `${e.name},${e.amount}`);
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
-
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-
     a.href = url;
     a.download = "expenses.csv";
     a.click();
@@ -73,20 +71,42 @@ export default function Dashboard() {
     <div className="relative min-h-screen text-white overflow-hidden">
       {/* BACKGROUND */}
       <div
-        className="absolute inset-0 -z-20 bg-cover bg-center"
+        className="fixed inset-0 -z-20 bg-cover bg-center"
         style={{ backgroundImage: `url(${bgImage})` }}
       />
-      <div className="absolute inset-0 -z-10 bg-black/60 backdrop-blur-[2px]" />
+      <div className="fixed inset-0 -z-10 bg-black/70" />
 
-      <div className="flex min-h-screen w-full">
+      <div className="flex">
+        {/* OVERLAY (mobile) */}
+        {sidebarOpen && (
+          <div
+            onClick={() => setSidebarOpen(false)}
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          />
+        )}
+
         {/* SIDEBAR */}
         <div
-          className={`fixed md:relative z-50 w-64 h-full bg-white/10 backdrop-blur-lg border-r border-white/10 px-6 py-8 transform transition-transform duration-300
+          className={`fixed top-0 left-0 w-64 h-full z-50 
+          bg-gradient-to-b from-black/60 to-black/30 
+          backdrop-blur-lg 
+          shadow-[4px_0_25px_rgba(0,0,0,0.6)]
+          px-6 py-8 transform transition-transform duration-300
           ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
         >
-          <div className="mb-12">
-            <h2 className="text-2xl font-bold">Finance</h2>
-            <p className="text-gray-400 text-sm mt-1">Dashboard Panel</p>
+          {/* HEADER */}
+          <div className="flex justify-between items-center mb-10">
+            <div>
+              <h2 className="text-2xl font-bold">Finance</h2>
+              <p className="text-gray-400 text-sm">Dashboard Panel</p>
+            </div>
+
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="md:hidden text-white text-xl"
+            >
+              ✕
+            </button>
           </div>
 
           <div className="flex flex-col gap-3">
@@ -123,18 +143,18 @@ export default function Dashboard() {
         </div>
 
         {/* MAIN */}
-        <div className="flex-1 flex flex-col w-full">
-          {/* NAVBAR */}
-          <div className="flex justify-between items-center px-4 sm:px-6 lg:px-10 py-4 border-b border-white/10">
+        <div className="flex-1 flex flex-col ml-0 md:ml-64 w-full">
+          {/* HEADER */}
+          <div className="flex justify-between items-center px-6 md:px-10 py-5 border-b border-white/10">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => setSidebarOpen(!sidebarOpen)}
+                onClick={() => setSidebarOpen(true)}
                 className="md:hidden bg-white/10 px-3 py-2 rounded"
               >
                 ☰
               </button>
 
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-semibold capitalize">
+              <h1 className="text-xl md:text-3xl font-semibold capitalize">
                 {view}
               </h1>
             </div>
@@ -157,14 +177,10 @@ export default function Dashboard() {
           </div>
 
           {/* CONTENT */}
-          <div className="px-4 sm:px-6 lg:px-10 py-6 flex-1 flex flex-col">
+          <div className="px-6 md:px-10 py-6 flex-1">
             {/* FORM */}
             {showForm && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="flex flex-col sm:flex-row gap-4 mb-6 bg-white/10 backdrop-blur-md p-4 rounded-xl border border-white/10"
-              >
+              <div className="flex flex-col md:flex-row gap-4 mb-6 bg-white/10 p-4 rounded-xl">
                 <input
                   placeholder="Expense"
                   value={name}
@@ -189,14 +205,13 @@ export default function Dashboard() {
                 >
                   Save
                 </button>
-              </motion.div>
+              </div>
             )}
 
             {/* DASHBOARD */}
             {view === "dashboard" && (
               <>
-                {/* STATS */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                   <div className="bg-white/10 p-6 rounded-xl">₹{total}</div>
                   <div className="bg-white/10 p-6 rounded-xl">
                     {expenses.length}
@@ -204,8 +219,7 @@ export default function Dashboard() {
                   <div className="bg-white/10 p-6 rounded-xl">{top}</div>
                 </div>
 
-                {/* CHARTS */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                   <div className="bg-white/10 p-6 rounded-xl">
                     <ResponsiveContainer width="100%" height={250}>
                       <BarChart data={expenses}>
@@ -234,18 +248,12 @@ export default function Dashboard() {
                   </div>
                 </div>
 
-                {/* INSIGHTS (UNCHANGED LOGIC) */}
-                <div className="mt-6 bg-white/10 rounded-xl p-6">
-                  <h3 className="text-lg mb-6 text-gray-300">Insights</h3>
-                  {expenses.length === 0 ? (
-                    <div className="text-gray-500">
-                      Add expenses to see analytics 📊
-                    </div>
-                  ) : (
-                    <p>
-                      You’ve logged {expenses.length} expenses totaling ₹{total}
-                    </p>
-                  )}
+                {/* INSIGHTS */}
+                <div className="bg-white/10 p-6 rounded-xl text-center">
+                  <h3 className="text-gray-400 mb-2">Insights</h3>
+                  <p>
+                    You’ve logged {expenses.length} expenses totaling ₹{total}
+                  </p>
                 </div>
               </>
             )}
@@ -259,7 +267,7 @@ export default function Dashboard() {
                     className="flex justify-between py-3 border-b border-white/10"
                   >
                     <span>{e.name}</span>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                       ₹{e.amount}
                       <FaTrash
                         className="cursor-pointer text-red-400"
