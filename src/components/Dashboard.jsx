@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import bgImage from "../assets/bg.jpg";
 
 import {
   BarChart,
@@ -19,6 +18,8 @@ import {
   FaPlus,
   FaTrash,
   FaDownload,
+  FaBars,
+  FaTimes,
 } from "react-icons/fa";
 
 const COLORS = ["#3b82f6", "#22c55e", "#f59e0b", "#ef4444", "#a855f7"];
@@ -40,9 +41,11 @@ export default function Dashboard() {
 
   const addExpense = () => {
     if (!name || !amount) return;
+
     setExpenses([...expenses, { name, amount: parseFloat(amount) }]);
     setName("");
     setAmount("");
+    setShowForm(false);
   };
 
   const deleteExpense = (index) => {
@@ -58,134 +61,144 @@ export default function Dashboard() {
 
   const exportCSV = () => {
     if (expenses.length === 0) return;
-    const rows = expenses.map((e) => `${e.name},${e.amount}`);
+
+    const rows = [
+      "Name,Amount",
+      ...expenses.map((e) => `${e.name},${e.amount}`),
+    ];
     const blob = new Blob([rows.join("\n")], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
+
     const a = document.createElement("a");
     a.href = url;
     a.download = "expenses.csv";
     a.click();
+
+    URL.revokeObjectURL(url);
   };
 
+  const pageWrap = "w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8";
+  const card =
+    "rounded-xl border border-white/10 bg-[#1d1d22]/80 shadow-lg shadow-black/20 backdrop-blur-md";
+
   return (
-    <div className="relative min-h-screen text-white overflow-hidden">
-      {/* BACKGROUND */}
-      <div
-        className="fixed inset-0 -z-20 bg-cover bg-center"
-        style={{ backgroundImage: `url(${bgImage})` }}
-      />
-      <div className="fixed inset-0 -z-10 bg-black/70" />
-
-      <div className="flex">
-        {/* OVERLAY (mobile) */}
-        {sidebarOpen && (
-          <div
-            onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/50 z-40 md:hidden"
-          />
-        )}
-
-        {/* SIDEBAR */}
+    <div className="relative min-h-screen overflow-x-hidden text-white">
+      {sidebarOpen && (
         <div
-          className={`fixed top-0 left-0 w-64 h-full z-50 
-          bg-gradient-to-b from-black/60 to-black/30 
-          backdrop-blur-lg 
-          shadow-[4px_0_25px_rgba(0,0,0,0.6)]
-          px-6 py-8 transform transition-transform duration-300
-          ${sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
+          onClick={() => setSidebarOpen(false)}
+          className="fixed inset-0 z-40 bg-black/60 md:hidden"
+        />
+      )}
+
+      <div className="mx-auto flex min-h-screen w-full max-w-7xl">
+        <aside
+          className={`fixed left-0 top-0 z-50 h-full w-64 border-r border-white/10
+          bg-black/55 px-5 py-6 backdrop-blur-xl transition-transform duration-300
+          md:relative md:left-auto md:top-auto md:min-h-screen md:translate-x-0 md:shrink-0
+          ${
+            sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+          }`}
         >
-          {/* HEADER */}
-          <div className="flex justify-between items-center mb-10">
+          <div className="mb-10 flex items-start justify-between">
             <div>
               <h2 className="text-2xl font-bold">Finance</h2>
-              <p className="text-gray-400 text-sm">Dashboard Panel</p>
+              <p className="mt-1 text-sm text-gray-400">Dashboard Panel</p>
             </div>
 
             <button
               onClick={() => setSidebarOpen(false)}
-              className="md:hidden text-white text-xl"
+              className="rounded-lg p-2 text-gray-300 hover:bg-white/10 md:hidden"
             >
-              ✕
+              <FaTimes />
             </button>
           </div>
 
-          <div className="flex flex-col gap-3">
-            <div
+          <nav className="space-y-2">
+            <button
               onClick={() => {
                 setView("dashboard");
                 setSidebarOpen(false);
               }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition ${
                 view === "dashboard"
                   ? "bg-white/10 text-white"
-                  : "text-gray-400 hover:bg-white/10"
+                  : "text-gray-400 hover:bg-white/10 hover:text-white"
               }`}
             >
               <FaChartPie className="text-blue-400" />
               Dashboard
-            </div>
+            </button>
 
-            <div
+            <button
               onClick={() => {
                 setView("expenses");
                 setSidebarOpen(false);
               }}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer ${
+              className={`flex w-full items-center gap-3 rounded-lg px-4 py-3 text-left transition ${
                 view === "expenses"
                   ? "bg-white/10 text-white"
-                  : "text-gray-400 hover:bg-white/10"
+                  : "text-gray-400 hover:bg-white/10 hover:text-white"
               }`}
             >
               <FaWallet />
               Expenses
+            </button>
+          </nav>
+        </aside>
+
+        <main className="min-h-screen min-w-0 flex-1">
+          <header className="border-b border-white/10 bg-black/20 backdrop-blur-md">
+            <div
+              className={`${pageWrap} flex flex-col gap-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:py-6`}
+            >
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="rounded-lg bg-white/10 p-3 hover:bg-white/15 md:hidden"
+                >
+                  <FaBars />
+                </button>
+
+                <div>
+                  <h1 className="text-2xl font-bold capitalize sm:text-4xl">
+                    {view}
+                  </h1>
+                  <p className="mt-1 hidden text-sm text-gray-400 sm:block">
+                    Track your expenses and spending insights
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <button
+                  onClick={exportCSV}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-white/10 px-4 py-2.5 text-sm hover:bg-white/15"
+                >
+                  <FaDownload size={12} />
+                  Export
+                </button>
+
+                <button
+                  onClick={() => setShowForm(!showForm)}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium hover:bg-blue-600"
+                >
+                  <FaPlus size={12} />
+                  Add
+                </button>
+              </div>
             </div>
-          </div>
-        </div>
+          </header>
 
-        {/* MAIN */}
-        <div className="flex-1 flex flex-col ml-0 md:ml-64 w-full">
-          {/* HEADER */}
-          <div className="flex justify-between items-center px-6 md:px-10 py-5 border-b border-white/10">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => setSidebarOpen(true)}
-                className="md:hidden bg-white/10 px-3 py-2 rounded"
-              >
-                ☰
-              </button>
-
-              <h1 className="text-xl md:text-3xl font-semibold capitalize">
-                {view}
-              </h1>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={exportCSV}
-                className="bg-gray-700 px-3 py-1.5 rounded-md text-sm flex items-center gap-2 hover:bg-gray-600"
-              >
-                <FaDownload size={12} /> Export
-              </button>
-
-              <button
-                onClick={() => setShowForm(!showForm)}
-                className="bg-blue-500 px-3 py-1.5 rounded-md text-sm flex items-center gap-2 hover:bg-blue-600"
-              >
-                <FaPlus size={12} /> Add
-              </button>
-            </div>
-          </div>
-
-          {/* CONTENT */}
-          <div className="px-6 md:px-10 py-6 flex-1">
-            {/* FORM */}
+          <section className={`${pageWrap} py-5 sm:py-8`}>
             {showForm && (
-              <div className="flex flex-col md:flex-row gap-4 mb-6 bg-white/10 p-4 rounded-xl">
+              <div
+                className={`${card} mb-5 grid gap-3 p-4 sm:mb-6 md:grid-cols-[1fr_1fr_auto]`}
+              >
                 <input
-                  placeholder="Expense"
+                  placeholder="Expense name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-transparent border border-white/20 px-4 py-2 rounded-lg w-full"
+                  className="w-full rounded-lg border border-white/10 bg-black/25 px-4 py-3 text-sm outline-none placeholder:text-gray-500 focus:border-blue-400"
                 />
 
                 <input
@@ -193,93 +206,152 @@ export default function Dashboard() {
                   placeholder="Amount"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
-                  className="bg-transparent border border-white/20 px-4 py-2 rounded-lg w-full"
+                  className="w-full rounded-lg border border-white/10 bg-black/25 px-4 py-3 text-sm outline-none placeholder:text-gray-500 focus:border-blue-400"
                 />
 
                 <button
-                  onClick={() => {
-                    addExpense();
-                    setShowForm(false);
-                  }}
-                  className="bg-green-500 px-4 py-2 rounded-lg"
+                  onClick={addExpense}
+                  className="rounded-lg bg-green-500 px-6 py-3 text-sm font-medium hover:bg-green-600"
                 >
                   Save
                 </button>
               </div>
             )}
 
-            {/* DASHBOARD */}
             {view === "dashboard" && (
               <>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-white/10 p-6 rounded-xl">₹{total}</div>
-                  <div className="bg-white/10 p-6 rounded-xl">
-                    {expenses.length}
-                  </div>
-                  <div className="bg-white/10 p-6 rounded-xl">{top}</div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                  <div className="bg-white/10 p-6 rounded-xl">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <BarChart data={expenses}>
-                        <XAxis dataKey="name" stroke="#aaa" />
-                        <YAxis stroke="#aaa" />
-                        <Tooltip />
-                        <Bar dataKey="amount">
-                          {expenses.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
+                  <div className={`${card} p-4 sm:p-5`}>
+                    <p className="text-xs uppercase tracking-wide text-gray-400">
+                      Total Spent
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold">₹{total}</h2>
                   </div>
 
-                  <div className="bg-white/10 p-6 rounded-xl">
-                    <ResponsiveContainer width="100%" height={250}>
-                      <PieChart>
-                        <Pie data={expenses} dataKey="amount" outerRadius={80}>
-                          {expenses.map((_, i) => (
-                            <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                          ))}
-                        </Pie>
-                      </PieChart>
-                    </ResponsiveContainer>
+                  <div className={`${card} p-4 sm:p-5`}>
+                    <p className="text-xs uppercase tracking-wide text-gray-400">
+                      Entries
+                    </p>
+                    <h2 className="mt-2 text-2xl font-semibold">
+                      {expenses.length}
+                    </h2>
+                  </div>
+
+                  <div className={`${card} p-4 sm:p-5`}>
+                    <p className="text-xs uppercase tracking-wide text-gray-400">
+                      Highest
+                    </p>
+                    <h2 className="mt-2 truncate text-2xl font-semibold">
+                      {top}
+                    </h2>
                   </div>
                 </div>
 
-                {/* INSIGHTS */}
-                <div className="bg-white/10 p-6 rounded-xl text-center">
-                  <h3 className="text-gray-400 mb-2">Insights</h3>
-                  <p>
+                <div className="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-2">
+                  <div className={`${card} p-4 sm:p-5`}>
+                    <h3 className="mb-4 text-sm font-medium text-gray-300">
+                      Expense Chart
+                    </h3>
+
+                    {expenses.length > 0 ? (
+                      <div className="h-56 sm:h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={expenses}>
+                            <XAxis dataKey="name" stroke="#9ca3af" />
+                            <YAxis stroke="#9ca3af" />
+                            <Tooltip />
+                            <Bar dataKey="amount" radius={[6, 6, 0, 0]}>
+                              {expenses.map((_, i) => (
+                                <Cell
+                                  key={i}
+                                  fill={COLORS[i % COLORS.length]}
+                                />
+                              ))}
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-white/10 text-sm text-gray-500 sm:h-64">
+                        No chart data yet
+                      </div>
+                    )}
+                  </div>
+
+                  <div className={`${card} p-4 sm:p-5`}>
+                    <h3 className="mb-4 text-sm font-medium text-gray-300">
+                      Expense Split
+                    </h3>
+
+                    {expenses.length > 0 ? (
+                      <div className="h-56 sm:h-64">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={expenses}
+                              dataKey="amount"
+                              outerRadius="75%"
+                            >
+                              {expenses.map((_, i) => (
+                                <Cell
+                                  key={i}
+                                  fill={COLORS[i % COLORS.length]}
+                                />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
+                    ) : (
+                      <div className="flex h-56 items-center justify-center rounded-lg border border-dashed border-white/10 text-sm text-gray-500 sm:h-64">
+                        No expense split yet
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className={`${card} p-5 text-center`}>
+                  <h3 className="mb-2 text-sm text-gray-400">Insights</h3>
+                  <p className="text-sm sm:text-base">
                     You’ve logged {expenses.length} expenses totaling ₹{total}
                   </p>
                 </div>
               </>
             )}
 
-            {/* EXPENSES */}
             {view === "expenses" && (
-              <div className="bg-white/10 p-6 rounded-xl">
-                {expenses.map((e, i) => (
-                  <div
-                    key={i}
-                    className="flex justify-between py-3 border-b border-white/10"
-                  >
-                    <span>{e.name}</span>
-                    <div className="flex gap-3 items-center">
-                      ₹{e.amount}
-                      <FaTrash
-                        className="cursor-pointer text-red-400"
-                        onClick={() => deleteExpense(i)}
-                      />
-                    </div>
+              <div className={`${card} p-4 sm:p-5`}>
+                {expenses.length === 0 ? (
+                  <p className="py-10 text-center text-sm text-gray-500">
+                    No expenses added yet
+                  </p>
+                ) : (
+                  <div className="divide-y divide-white/10">
+                    {expenses.map((e, i) => (
+                      <div
+                        key={i}
+                        className="flex items-center justify-between gap-4 py-4"
+                      >
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{e.name}</p>
+                          <p className="text-sm text-gray-400">₹{e.amount}</p>
+                        </div>
+
+                        <button
+                          onClick={() => deleteExpense(i)}
+                          className="shrink-0 rounded-lg p-2 text-red-400 hover:bg-red-500/10 hover:text-red-300"
+                        >
+                          <FaTrash />
+                        </button>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
             )}
-          </div>
-        </div>
+          </section>
+        </main>
       </div>
     </div>
   );
